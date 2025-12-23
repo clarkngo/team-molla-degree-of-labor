@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuestLog — Prototype</title>
+  <style>
+    :root{
+      --bg:#050505;
+      --card:rgba(10, 10, 20, 0.98);
+      --card2:#111;
+      --text:#e8f0ec;
+      --muted:#b7c6bf;
+      --accent:#f8b195;
+      --accent2:#7fb7ff;
+      --warn:#ffd36e;
+      --danger:#f67280;
+      --border:#f8b195;
+      --shadow: 0 0 25px rgba(0,0,0,.35);
+      --radius:0px;
+      --mono: 'Courier New', monospace;
+      --sans: 'Courier New', monospace;
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; background: var(--bg); color:var(--text); font-family:var(--sans); line-height:1.4; }
+    header{ padding:28px 20px 10px; max-width:1100px; margin:0 auto; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; }
+    .brand h1{ margin:0; font-size:28px; letter-spacing:.2px; color: var(--accent); }
+    .brand p{ margin:6px 0 0; color:var(--muted); max-width:620px; font-size: 13px; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border); background:rgba(21,28,25,.75); color:var(--muted); font-size:13px; }
+    main{ max-width:1100px; margin:0 auto; padding:10px 20px 40px; display:grid; grid-template-columns: 360px 1fr; gap:16px; }
+    @media (max-width: 980px){ main{grid-template-columns:1fr} }
+    .card{ background:var(--card); border:1px solid var(--border); overflow:hidden; }
+    .card .hd{ padding:14px 14px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(0,0,0,.12); }
+    .card .hd h2{ margin:0; font-size:14px; letter-spacing:.35px; text-transform:uppercase; color:var(--accent); }
+    .card .bd{ padding:14px; }
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+    input, select, button, textarea{ font:inherit; color:var(--text); }
+    input, select, textarea{ width:100%; padding:10px 12px; border:1px solid var(--border); background:#111; outline:none; }
+    button{ border:1px solid var(--border); background:#111; padding:10px 12px; cursor:pointer; font-weight: bold; }
+    button:hover{ background: #7eb356; color: #000; }
+    button.primary{ background: var(--danger); border: none; }
+    .kpi{ padding:10px 12px; border:1px solid var(--border); background:rgba(0,0,0,.14); }
+    .bar{ height:12px; background:#111; border:1px solid #444; }
+    .bar > div{ height:100%; width:0%; background: linear-gradient(90deg, #7eb356, #a8e6cf); }
+    .list{ display:flex; flex-direction:column; gap:10px; }
+    .item{ padding:10px 12px; border:1px solid var(--border); background:rgba(0,0,0,.14); display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .sep{ height:1px; background:var(--border); margin:12px 0; opacity: 0.3; }
+    .nav-grp { display: flex; gap: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>QuestLog <span style="font-size: 12px;">(system)</span></h1>
+    <p>Real-world effort tracked as progress.</p>
+    <div class="nav-grp">
+      <button onclick="window.location.href='1.html'" style="background: #444;">< BACK</button>
+      <button onclick="window.location.href='3.html'" style="background: #7fb7ff;">FINAL IDENTITY ></button>
+    </div>
+  </div>
+  <div class="pill mono" id="todayPill">Today: —</div>
+</header>
+
+<main>
+  <section class="card">
+    <div class="hd"><h2>Profile</h2><span id="roleLock" style="font-size: 10px;">LOCKED</span></div>
+    <div class="bd">
+      <label>Avatar name</label><input id="name" placeholder="Junse" />
+      <label>Icon</label><select id="icon"></select>
+      <label>Class</label><select id="role"></select>
+      <div class="row" style="margin-top:12px"><button class="primary" id="saveProfile">SAVE</button><button id="resetAll">RESET</button></div>
+      <div class="sep"></div>
+      <div class="grid3" style="display: flex; gap: 5px;">
+        <div class="kpi"><div class="v" id="kLevel">1</div><div class="k">LVL</div></div>
+        <div class="kpi"><div class="v" id="kXP">0</div><div class="k">XP</div></div>
+        <div class="kpi"><div class="v" id="kStreak">0</div><div class="k">STRK</div></div>
+      </div>
+      <label>Progress</label><div class="bar"><div id="xpBar"></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="hd"><h2>Game Board</h2><span class="tag" id="focusTag">Focus: —</span></div>
+    <div class="bd">
+        <label>Task title</label><input id="taskTitle" />
+        <div class="row"><div style="flex:1"><label>Type</label><select id="taskType"></select></div><div style="flex:1"><label>Energy</label><select id="energy"></select></div></div>
+        <label>Minutes</label><input id="minutes" type="number" value="10" />
+        <div class="sep"></div>
+        <button class="primary" id="completeQuest" style="width:100%">COMPLETE QUEST</button>
+        <div id="recent" class="list" style="margin-top: 20px;"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const STORAGE_KEY = "questlog_prototype_v1";
+  const CLASSES = { Mage: { focus: "Study", mult: 1.3 }, Warrior:{ focus: "Fitness", mult: 1.3 }, Rogue: { focus: "Errands", mult: 1.3 }, Healer: { focus: "Self-Care", mult: 1.3 } };
+  const TASK_TYPES = ["Study","Fitness","Errands","Self-Care"];
+  const ENERGY = { Low:1.2, Medium:1.0, High:0.8 };
+  const ICONS = ["🧙","🗡️","🧠","🌿"];
+
+  let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { profile: {name:"", icon:ICONS[0], role:null}, stats: {level:1, xp:0, streak:0}, recent: [] };
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); }
+  function render() {
+    document.getElementById('kLevel').innerText = state.stats.level;
+    document.getElementById('kXP').innerText = state.stats.xp;
+    document.getElementById('kStreak').innerText = state.stats.streak;
+    document.getElementById('xpBar').style.width = (state.stats.xp % 100) + "%";
+    const recentDiv = document.getElementById('recent');
+    recentDiv.innerHTML = state.recent.map(r => `<div class="item"><div>${r.title}</div><div>+${r.xp}xp</div></div>`).join('');
+  }
+
+  document.getElementById('saveProfile').onclick = () => {
+    state.profile.name = document.getElementById('name').value;
+    state.profile.role = document.getElementById('role').value;
+    save();
+  };
+
+  document.getElementById('completeQuest').onclick = () => {
+    const mins = parseInt(document.getElementById('minutes').value);
+    const xp = Math.floor(mins * 1.5);
+    state.stats.xp += xp;
+    state.stats.level = Math.floor(state.stats.xp / 100) + 1;
+    state.recent.unshift({title: document.getElementById('taskTitle').value, xp});
+    state.recent = state.recent.slice(0, 5);
+    save();
+  };
+
+  function init() {
+    const r = document.getElementById('role'); TASK_TYPES.forEach(t => r.innerHTML += `<option value="${t}">${t}</option>`);
+    const t = document.getElementById('taskType'); TASK_TYPES.forEach(v => t.innerHTML += `<option value="${v}">${v}</option>`);
+    const e = document.getElementById('energy'); Object.keys(ENERGY).forEach(k => e.innerHTML += `<option value="${k}">${k}</option>`);
+    const i = document.getElementById('icon'); ICONS.forEach(v => i.innerHTML += `<option value="${v}">${v}</option>`);
+    render();
+  }
+  init();
+</script>
+</body>
+</html>

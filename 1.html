@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QuestLog: Elite World Expansion</title>
+    <style>
+        :root { --gold: #f8b195; --panel: rgba(10, 10, 20, 0.98); }
+        body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        #wrapper { position: relative; margin-top: 10px; border: 4px solid #f8b195; image-rendering: pixelated; }
+        canvas { display: block; background: #1a1a1a; box-shadow: 0 0 60px rgba(0,0,0,1); }
+        
+        .hud { position: absolute; top: 15px; left: 15px; background: var(--panel); padding: 12px; border: 2px solid #f8b195; min-width: 220px; pointer-events: none; z-index: 10; }
+        .bar { width: 100%; height: 12px; background: #111; margin: 5px 0; border: 1px solid #444; }
+        .fill { height: 100%; background: linear-gradient(90deg, #7eb356, #a8e6cf); width: 0%; transition: width 0.5s; }
+        
+        .sidebar { position: fixed; right: 20px; top: 20px; width: 300px; background: var(--panel); border: 2px solid #f8b195; padding: 15px; max-height: 90vh; overflow-y: auto; z-index: 10; }
+        input, select, button { width: 100%; margin: 6px 0; background: #111; color: #fff; border: 1px solid #f8b195; padding: 10px; font-family: inherit; }
+        button { background: #f67280; cursor: pointer; font-weight: bold; border: none; text-transform: uppercase; }
+        button:hover { background: #7eb356; }
+
+        #dialogue-box {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 75%; background: var(--panel); border: 4px solid white;
+            padding: 20px; display: none; text-align: center; z-index: 100;
+        }
+        .quest-card { background: rgba(255,255,255,0.05); padding: 10px; margin-bottom: 10px; border-left: 3px solid #f67280; }
+        .nav-btn { background: #7fb7ff; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <canvas id="gameCanvas"></canvas>
+    <div class="hud">
+        <div style="color:#f8b195; font-weight:bold; letter-spacing:1px;"><span id="area-name">HOMETOWN</span> | LVL <span id="lvl">1</span></div>
+        <div class="bar"><div id="xp-fill" class="fill"></div></div>
+        <div style="font-size: 14px;">GOLD: <span id="gold" style="color:#ffd700">100</span>g</div>
+    </div>
+    <div id="dialogue-box"></div>
+</div>
+
+<div class="sidebar">
+    <h3 style="text-align:center; color:#f8b195; margin:0 0 10px 0;">QUEST BOARD</h3>
+    <input type="text" id="tName" placeholder="Task Name...">
+    <select id="tSize"><option value="60">Common Task</option><option value="300">Elite Boss</option></select>
+    <select id="tEnergy"><option value="1.5">Energy: LOW (1.5x Reward)</option><option value="1.0" selected>Energy: MED</option></select>
+    <button onclick="addQuest()">COMMIT TO TASK</button>
+    <div id="questList"></div>
+    <button class="nav-btn" onclick="window.location.href='2.html'">CHARACTER & STATS →</button>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800; canvas.height = 500;
+
+    let state = {
+        lvl: 1, xp: 0, gold: 100, currentArea: "hometown",
+        pCloth: "#f67280", pHair: "#5d4037", pSkin: "#ffdbac",
+        player: { x: 400, y: 350 },
+        quests: [],
+        lastDialogueTime: 0,
+        currentRandomLine: ""
+    };
+
+    const areaOrder = ["hometown", "town", "forest", "bay", "city", "tundra"];
+
+    const areaData = {
+        hometown: {
+            name: "THE QUIET HOMETOWN",
+            bgTop: "#2c3e50", bgBot: "#4ca1af", ground: "#333",
+            npcs: [
+                { x: 200, y: 350, name: "Mother", skin: "#ffdbac", hair: "#4a3728", cloth: "#f67280", type: "talk", 
+                  lines: ["Don't forget to eat, dear.", "Your father's sword is in the attic.", "The world is big, stay safe."] }
+            ]
+        },
+        town: {
+            name: "THE GOLDEN TOWN",
+            bgTop: "#1a2a3a", bgBot: "#2c3e50", ground: "#222",
+            npcs: [
+                { x: 160, y: 350, name: "Merchant", skin: "#8d5524", hair: "#222", cloth: "#f8b195", type: "shop", 
+                  lines: ["New threads for a new level?", "Welcome back! The vault is full.", "Quality goods for quality heroes."] },
+                { x: 620, y: 350, name: "Sage", skin: "#ffdbac", hair: "#fff", cloth: "#a8e6cf", type: "talk", 
+                  lines: ["One small step is still progress.", "Rest is part of the work.", "Manage your energy, hero."] }
+            ]
+        },
+        forest: {
+            name: "THE EMERALD WILD",
+            bgTop: "#0a1a0a", bgBot: "#1a301a", ground: "#111a11",
+            npcs: [
+                { x: 500, y: 350, name: "Druid", skin: "#e0ac69", hair: "#4a3728", cloth: "#7eb356", type: "shop", 
+                  lines: ["Nature rewards the patient.", "The forest grows as you do.", "Listen to the leaves."] }
+            ]
+        },
+        bay: {
+            name: "NEON HARBOR",
+            bgTop: "#000428", bgBot: "#004e92", ground: "#001a33",
+            npcs: [
+                { x: 300, y: 350, name: "Captain", skin: "#ffdbac", hair: "#222", cloth: "#34495e", type: "talk", 
+                  lines: ["The sea is restless tonight.", "Anchors aweigh!", "A storm is brewing in the North."] }
+            ]
+        },
+        city: {
+            name: "CAPITAL CITADEL",
+            bgTop: "#232526", bgBot: "#414345", ground: "#1a1a1a",
+            npcs: [
+                { x: 200, y: 350, name: "Knight", skin: "#ffdbac", hair: "#bdc3c7", cloth: "#7f8c8d", type: "talk", 
+                  lines: ["Eyes forward, citizen.", "The King is not seeing visitors.", "Order must be maintained."] },
+                { x: 550, y: 350, name: "Tailor", skin: "#e0ac69", hair: "#2c3e50", cloth: "#9b59b6", type: "shop", 
+                  lines: ["Purple is the color of royalty.", "I can make you look like a legend.", "Check out these silk robes!"] }
+            ]
+        },
+        tundra: {
+            name: "THE FROZEN TUNDRA",
+            bgTop: "#e6e6e6", bgBot: "#ffffff", ground: "#dcdde1",
+            npcs: [
+                { x: 400, y: 350, name: "Hermit", skin: "#ffdbac", hair: "#fff", cloth: "#2f3640", type: "talk", 
+                  lines: ["It's cold... so cold.", "Why have you come to the edge of the world?", "The ice remembers everything."] }
+            ]
+        }
+    };
+
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.code] = true);
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    function drawEliteHuman(x, y, skin, hair, cloth, isPlayer) {
+        const breathe = Math.sin(Date.now() / 400) * 2;
+        const walk = isPlayer && (keys.ArrowLeft || keys.ArrowRight) ? Math.sin(Date.now() / 100) * 5 : 0;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath(); ctx.ellipse(20, 70, 18, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000"; ctx.fillRect(2, 2 + (isPlayer?breathe:0), 36, 66);
+        ctx.fillStyle = "#111";
+        ctx.fillRect(8, 48 + walk, 10, 18); 
+        ctx.fillRect(22, 48 - walk, 10, 18); 
+        ctx.fillStyle = cloth; ctx.fillRect(4, 28 + breathe, 32, 28);
+        ctx.fillStyle = skin;
+        ctx.fillRect(0, 30 + (isPlayer?walk:0), 6, 16);
+        ctx.fillRect(34, 30 - (isPlayer?walk:0), 6, 16);
+        ctx.fillStyle = skin; ctx.fillRect(10, 6 + breathe, 20, 22);
+        ctx.fillStyle = hair; ctx.fillRect(8, 2 + breathe, 24, 12);
+        ctx.fillStyle = hair; ctx.fillRect(8, 2 + breathe, 6, 20);
+        ctx.fillStyle = "#000"; ctx.fillRect(14, 16 + breathe, 4, 3); ctx.fillRect(23, 16 + breathe, 4, 3);
+        ctx.restore();
+    }
+
+    function drawScene() {
+        const area = areaData[state.currentArea];
+        let sky = ctx.createLinearGradient(0, 0, 0, 400);
+        sky.addColorStop(0, area.bgTop); sky.addColorStop(1, area.bgBot);
+        ctx.fillStyle = sky; ctx.fillRect(0, 0, 800, 500);
+
+        if(state.currentArea === "tundra") {
+            ctx.fillStyle = "white";
+            for(let i=0; i<50; i++) ctx.fillRect((i*153+Date.now()/10)%800, (i*87+Date.now()/5)%500, 3, 3);
+        } else if (state.currentArea === "bay") {
+            ctx.fillStyle = "#00d2ff";
+            ctx.fillRect(0, 380, 800, 40);
+        }
+
+        ctx.fillStyle = area.ground; ctx.fillRect(0, 420, 800, 80);
+        ctx.fillStyle = "#f8b195"; ctx.fillRect(0, 418, 800, 3); 
+    }
+
+    function checkTransitions() {
+        const currentIndex = areaOrder.indexOf(state.currentArea);
+        
+        if (state.player.x > 785) {
+            if (currentIndex < areaOrder.length - 1) {
+                state.currentArea = areaOrder[currentIndex + 1];
+                state.player.x = 20;
+                resetDialogue();
+            } else { state.player.x = 785; }
+        } 
+        else if (state.player.x < 15) {
+            if (currentIndex > 0) {
+                state.currentArea = areaOrder[currentIndex - 1];
+                state.player.x = 770;
+                resetDialogue();
+            } else { state.player.x = 15; }
+        }
+        document.getElementById('area-name').innerText = areaData[state.currentArea].name.toUpperCase();
+    }
+
+    function resetDialogue() {
+        state.lastDialogueTime = 0;
+        document.getElementById('dialogue-box').style.display = "none";
+    }
+
+    function addQuest() {
+        const n = document.getElementById('tName').value;
+        const s = parseInt(document.getElementById('tSize').value);
+        const e = parseFloat(document.getElementById('tEnergy').value);
+        if(!n) return;
+        state.quests.push({ id: Date.now(), n, xp: Math.floor(s*e), g: Math.floor(s/5) });
+        document.getElementById('tName').value = ''; renderQuests();
+    }
+
+    function completeQuest(id) {
+        const i = state.quests.findIndex(q => q.id === id);
+        const q = state.quests[i];
+        state.xp += q.xp; state.gold += q.g;
+        state.quests.splice(i, 1);
+        if(state.xp >= state.lvl*300) { state.xp -= state.lvl*300; state.lvl++; }
+        updateUI(); renderQuests();
+    }
+
+    function updateUI() {
+        document.getElementById('lvl').innerText = state.lvl;
+        document.getElementById('gold').innerText = state.gold;
+        document.getElementById('xp-fill').style.width = (state.xp / (state.lvl*300) * 100) + "%";
+    }
+
+    function renderQuests() {
+        const l = document.getElementById('questList'); l.innerHTML = "";
+        state.quests.forEach(q => {
+            l.innerHTML += `<div class="quest-card"><b>${q.n}</b><br><small>${q.xp}XP | ${q.g}g</small>
+            <button onclick="completeQuest(${q.id})" style="font-size:10px; margin-top:5px; padding:4px;">SLAIN</button></div>`;
+        });
+    }
+
+    function buy(cloth, hair, cost) {
+        if(state.gold >= cost) {
+            state.gold -= cost; state.pCloth = cloth; state.pHair = hair;
+            updateUI();
+        }
+    }
+
+    function loop() {
+        if(keys['ArrowLeft']) state.player.x -= 5;
+        if(keys['ArrowRight']) state.player.x += 5;
+
+        ctx.clearRect(0,0,800,500);
+        drawScene();
+        checkTransitions();
+
+        const currentNPCs = areaData[state.currentArea].npcs;
+        currentNPCs.forEach(n => drawEliteHuman(n.x, n.y, n.skin, n.hair, n.cloth, false));
+        drawEliteHuman(state.player.x, state.player.y, state.pSkin, state.pHair, state.pCloth, true);
+
+        let nearAny = false;
+        currentNPCs.forEach(n => {
+            if(Math.abs(state.player.x - n.x) < 70) {
+                nearAny = true;
+                ctx.fillStyle = "white"; ctx.font = "bold 14px Courier";
+                ctx.fillText("[E] TALK", n.x - 5, n.y - 20);
+                
+                if(keys['KeyE']) {
+                    const box = document.getElementById('dialogue-box');
+                    box.style.display = "block";
+                    if (Date.now() - state.lastDialogueTime > 1000) {
+                        state.currentRandomLine = n.lines[Math.floor(Math.random() * n.lines.length)];
+                        state.lastDialogueTime = Date.now();
+                    }
+                    let shopUI = (n.type === "shop") ? `<div style="margin-top:10px;"><button onclick="buy('#6c5b7b', '#222', 50)">Buy Mage Garb (50g)</button> <button onclick="buy('#2f3640', '#fff', 75)">Buy Winter Coat (75g)</button></div>` : "";
+                    box.innerHTML = `<strong>${n.name}:</strong> "${state.currentRandomLine}"` + shopUI;
+                }
+            }
+        });
+        if(!nearAny) document.getElementById('dialogue-box').style.display = "none";
+        requestAnimationFrame(loop);
+    }
+    updateUI(); loop();
+</script>
+</body>
+</html>
