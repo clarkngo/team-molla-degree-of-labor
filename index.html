@@ -4,28 +4,151 @@
     <meta charset="UTF-8">
     <title>QuestLog: Legend of Progress</title>
     <style>
-        body { 
-            margin: 0; background: #050505; color: white; 
-            font-family: 'Courier New', monospace; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; text-align: center;
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; background: #050505; color: white;
+            font-family: 'Courier New', monospace;
+        }
+        a { color: #f8b195; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 40px 20px;
         }
         .container { border: 4px solid #f8b195; padding: 40px; background: rgba(10, 10, 20, 0.98); }
         h1 { color: #f8b195; font-size: 3rem; margin-bottom: 10px; }
-        p { color: #muted; margin-bottom: 30px; }
-        button { 
-            background: #f67280; color: white; border: none; 
-            padding: 15px 30px; font-family: inherit; font-weight: bold; 
+        .hero p { color: #b8b8c0; margin-bottom: 30px; }
+        button {
+            background: #f67280; color: white; border: none;
+            padding: 15px 30px; font-family: inherit; font-weight: bold;
             cursor: pointer; text-transform: uppercase; font-size: 1.2rem;
         }
         button:hover { background: #7eb356; }
+        .scroll-hint { margin-top: 24px; color: #666; font-size: 0.9rem; }
+
+        /* Content sections */
+        main { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+        section.doc { border-top: 2px solid #221f2b; padding: 50px 0; }
+        section.doc:first-child { border-top: none; }
+        h2 { color: #f8b195; font-size: 1.8rem; margin-bottom: 8px; }
+        h3 { color: #f67280; font-size: 1.15rem; margin: 24px 0 8px; }
+        .doc p, .doc li { color: #cfcfd6; line-height: 1.6; font-size: 0.95rem; }
+        .doc ul { padding-left: 22px; }
+        .lede { color: #f8b195; font-style: italic; }
+        blockquote {
+            border-left: 3px solid #f67280; margin: 12px 0; padding: 6px 16px;
+            color: #cfcfd6; background: rgba(246,114,128,0.06);
+        }
+        blockquote b { color: #f8b195; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85rem; }
+        th, td { border: 1px solid #333; padding: 8px 10px; text-align: left; color: #cfcfd6; }
+        th { background: rgba(248,177,149,0.12); color: #f8b195; }
+        code.formula {
+            display: block; background: rgba(10,10,20,0.98); border: 2px solid #f8b195;
+            padding: 14px; margin: 16px 0; color: #f8b195; text-align: center;
+        }
+        .disclaimer {
+            margin-top: 20px; padding: 16px; border: 1px dashed #555;
+            color: #999; font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>QUESTLOG</h1>
-        <p>Turn your real-world effort into RPG progress.</p>
-        <button onclick="window.location.href='1.html'">Start Adventure</button>
+    <div class="hero">
+        <div class="container">
+            <h1>QUESTLOG</h1>
+            <p>Turn your real-world effort into RPG progress.</p>
+            <button onclick="window.location.href='1.html'">Start Adventure</button>
+        </div>
+        <div class="scroll-hint">↓ scroll for the full story</div>
     </div>
+
+    <main>
+        <section class="doc" id="problem">
+            <h2>Problem Statement</h2>
+            <p class="lede">Dopamine → burnout</p>
+            <p>People across ages are struggling to complete everyday responsibilities because tasks that lack immediate intrinsic reward trigger procrastination and overwhelm, reducing productivity and well-being. How can we help that problem?</p>
+        </section>
+
+        <section class="doc" id="motivation">
+            <h2>Motivation</h2>
+            <blockquote><b>Chris:</b> Motivating yourself is hard when you start to think about the reason why you do anything, therefore, we need to make something that creates a reason for you (ie. gamified chores).</blockquote>
+            <blockquote><b>Mindy:</b> I relate to this statement because it's hard for me to focus and remember things because I have adhd. After I burnout (lose dopamine), I don't wanna focus nor work. My motivation is gone.</blockquote>
+            <blockquote><b>Junse:</b> It's hard to make the first step.</blockquote>
+            <blockquote><b>Anna:</b> I personally struggled with neglecting everyday chores because they felt boring and meaningless. Since I have easy access to video games that give instant rewards, my brain always chose the game over the chore. We were motivated to create a Degree of Labor to bring that same 'instant reward' feeling to real-life tasks, helping us level up in the real world just as easily as we do in a game.</blockquote>
+        </section>
+
+        <section class="doc" id="background">
+            <h2>Background</h2>
+            <p>We focus specifically on burnout-related procrastination, not clinical burnout treatment. QuestLog does not treat burnout clinically; it supports motivation through behavioral design inspired by reward-system research.</p>
+            <p>Academic burnout functions as a chronic state of exhaustion that downregulates dopamine receptors, transforming educational challenges into a source of dread rather than achievement. This chemical imbalance leads to a profound sense of detachment and cognitive decline, causing a sharp drop in academic performance and a rise in long-term psychological distress.</p>
+
+            <h3>Gamify?</h3>
+            <p>To gamify is to apply game-design elements and principles (such as point scoring, competition, and rules of play) to non-game activities to increase engagement and motivation.</p>
+
+            <h3>Why RPG specifically?</h3>
+            <ul>
+                <li>🎮 <b>Progression-based</b> — XP, levels, and quests give visible, continuous progress</li>
+                <li>🎯 <b>Small actions matter</b> — even minor tasks contribute to long-term growth</li>
+                <li>🧠 <b>Restores self-efficacy</b> — users feel capable again by "winning" small battles</li>
+                <li>🔁 <b>Intrinsic motivation loop</b> — effort → reward → progress → desire to continue</li>
+            </ul>
+            <p>Gamification is already accepted and normalized (Duolingo, fitness apps), so users are familiar with RPG concepts with no learning curve. When motivation is broken, systems that rely on motivation fail — RPG mechanics rebuild motivation by turning effort into visible progress.</p>
+        </section>
+
+        <section class="doc" id="related-work">
+            <h2>Related Work</h2>
+            <p>Habitica, Duolingo, Fitbit &amp; Nike Run Club have all explored gamified motivation. <b style="color:#f8b195">What's different:</b> Habitica gamifies discipline, while QuestLog gamifies motivation — better suited for burned-out users who struggle to even start.</p>
+            <ul>
+                <li><b>The 80% Threshold:</b> over 80% of the "Class of 2024" experienced burnout during their degree, nearly 30% "frequently" (Higher Ed Dive / Handshake 2024).</li>
+                <li><b>Retention Crisis:</b> one in three students considers leaving their program due to emotional stress — the leading predictor of college dropouts (Lumina Foundation / Gallup, 2024–2025).</li>
+                <li><b>The Flourishing Gap:</b> the 2024–2025 Healthy Minds Study found "flourishing" dropped to 36%.</li>
+                <li><b>Dopamine Deficiency:</b> chronic burnout is linked to "blunted" dopamine pathways that stall the drive to complete tasks (Cleveland Clinic 2024, MDPI 2025).</li>
+            </ul>
+        </section>
+
+        <section class="doc" id="approach">
+            <h2>Approach</h2>
+            <p>Our contribution is translating burnout and motivation research into a low-friction, game-based system that rewards effort consistently without judgment. XP is measured by time spent, making rewards objective and reducing decision fatigue and self-judgment. The system rewards effort, not difficulty or perfection.</p>
+            <code class="formula">XP = minutes × class_multiplier × energy_modifier</code>
+            <h3>Burnout-safe streaks</h3>
+            <p>Not a "perfect streak" — a <b style="color:#f8b195">momentum streak</b>. Missing a day pauses progress instead of erasing it, buffs gently fade instead of being lost, and returning after an absence earns a "welcome back" bonus rather than a penalty. Social warmth beats accountability pressure.</p>
+        </section>
+
+        <section class="doc" id="design">
+            <h2>Design</h2>
+            <table>
+                <tr><th>Feature</th><th>Standard To-Do App</th><th>Habitica</th><th>Degrees of Labor</th></tr>
+                <tr><td>Primary Goal</td><td>Efficiency</td><td>Discipline</td><td>Motivation Recovery</td></tr>
+                <tr><td>User State</td><td>Healthy/Functional</td><td>Building Habits</td><td>Burnt Out / Low Dopamine</td></tr>
+                <tr><td>Reward Style</td><td>Checked box</td><td>Item/Pet drops</td><td>Progression-based XP</td></tr>
+                <tr><td>Difficulty</td><td>Static</td><td>User-set</td><td>Energy-Adaptive (Dynamic)</td></tr>
+            </table>
+        </section>
+
+        <section class="doc" id="implementation">
+            <h2>Implementation</h2>
+            <table>
+                <tr><th>Section</th><th>Core Content &amp; Features</th></tr>
+                <tr><td>Core Concept</td><td>A productivity app that transforms boring, thankless adult responsibilities into an RPG adventure.</td></tr>
+                <tr><td>The Core Loop</td><td>Add Task → Quest → Earn XP → Level Up Avatar → Desire Next Task.</td></tr>
+                <tr><td>Character System</td><td>Pixel-art avatars: Mage (Study), Warrior (Fitness), Rogue (Errands).</td></tr>
+                <tr><td>Quest Mechanics</td><td>Mobs vs. Bosses: small chores = Common Mobs; large projects = Boss Battles.</td></tr>
+                <tr><td>The Energy System</td><td>Users select Energy Level (Low/Med/High); low energy earns a higher multiplier.</td></tr>
+                <tr><td>Economy (Bank)</td><td>Gold buys digital gear or real-world rewards (e.g. 500 Gold = 1hr Netflix).</td></tr>
+                <tr><td>Social System</td><td>Parties &amp; diversity buffs unlock shared bonuses only when members do different task types.</td></tr>
+                <tr><td>Booster System</td><td>Commitment contracts like "Focus Scrolls" (+30% XP) that expire if a day is skipped.</td></tr>
+            </table>
+        </section>
+
+        <section class="doc" id="verification">
+            <h2>Verification / Maintenance</h2>
+            <div class="disclaimer">
+                DegreeOfLabor is a productivity and motivation-support tool, not a medical or therapeutic intervention. "Dopamine" and burnout research are used as design inspiration to explain user behavior, not as clinical treatment claims. Our primary focus is college and high-school students experiencing burnout-related procrastination.
+            </div>
+        </section>
+    </main>
 </body>
 </html>
